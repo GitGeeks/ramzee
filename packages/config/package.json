@@ -1,0 +1,11 @@
+{
+  "name": "@ramzee/config",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./eslint": "./eslint.config.mjs",
+    "./typescript/base": "./tsconfig.base.json",
+    "./typescript/node": "./tsconfig.node.json",
+    "./typescript/react": "./tsconfig.react.json"
+  }
+}

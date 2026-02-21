@@ -1,0 +1,8 @@
+{
+  "extends": "@ramzee/config/typescript/node",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src"]
+}
