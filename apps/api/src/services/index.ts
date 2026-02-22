@@ -9,3 +9,4 @@ export * from "./notification.js";
 export * from "./herd.js";
 export * from "./message.js";
 export * from "./gamification.js";
+export * from "./search.js";

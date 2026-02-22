@@ -7,3 +7,4 @@ export * from "./notifications/index.js";
 export * from "./herds/index.js";
 export * from "./messages/index.js";
 export * from "./gamification/index.js";
+export * from "./search/index.js";
