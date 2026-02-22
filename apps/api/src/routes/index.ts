@@ -5,3 +5,4 @@ export * from "./users/index.js";
 export * from "./feed/index.js";
 export * from "./notifications/index.js";
 export * from "./herds/index.js";
+export * from "./messages/index.js";

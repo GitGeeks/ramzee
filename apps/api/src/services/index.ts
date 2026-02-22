@@ -7,3 +7,4 @@ export * from "./social.js";
 export * from "./feed.js";
 export * from "./notification.js";
 export * from "./herd.js";
+export * from "./message.js";
