@@ -10,3 +10,4 @@ export * from "./herd.js";
 export * from "./message.js";
 export * from "./gamification.js";
 export * from "./search.js";
+export * from "./moderation.js";
