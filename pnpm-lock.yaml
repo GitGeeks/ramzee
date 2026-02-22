@@ -51,7 +51,7 @@ importers:
         specifier: ^5.1.0
         version: 5.2.5
       '@fastify/websocket':
-        specifier: ^11.0.1
+        specifier: ^11.2.0
         version: 11.2.0
       '@ramzee/database':
         specifier: workspace:*

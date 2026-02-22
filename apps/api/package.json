@@ -18,7 +18,7 @@
     "@fastify/rate-limit": "^10.1.1",
     "@fastify/swagger": "^9.2.0",
     "@fastify/swagger-ui": "^5.1.0",
-    "@fastify/websocket": "^11.0.1",
+    "@fastify/websocket": "^11.2.0",
     "@ramzee/database": "workspace:*",
     "@ramzee/shared": "workspace:*",
     "drizzle-orm": "^0.38.3",

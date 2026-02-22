@@ -1,8 +1,8 @@
 import Fastify, { type FastifyInstance, type FastifyError } from "fastify";
 import helmet from "@fastify/helmet";
 import { env } from "./config/index.js";
-import { authPlugin, corsPlugin, rateLimitPlugin, swaggerPlugin } from "./plugins/index.js";
-import { healthRoutes, authRoutes, bleatRoutes, userRoutes, feedRoutes } from "./routes/index.js";
+import { authPlugin, corsPlugin, rateLimitPlugin, swaggerPlugin, websocketPlugin } from "./plugins/index.js";
+import { healthRoutes, authRoutes, bleatRoutes, userRoutes, feedRoutes, notificationRoutes } from "./routes/index.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -31,6 +31,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(authPlugin);
   await fastify.register(rateLimitPlugin);
   await fastify.register(swaggerPlugin);
+  await fastify.register(websocketPlugin);
 
   // Global error handler
   fastify.setErrorHandler((error: FastifyError, request, reply) => {
@@ -89,6 +90,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(bleatRoutes, { prefix: "/v1" });
   await fastify.register(userRoutes, { prefix: "/v1" });
   await fastify.register(feedRoutes, { prefix: "/v1" });
+  await fastify.register(notificationRoutes, { prefix: "/v1" });
 
   return fastify;
 }

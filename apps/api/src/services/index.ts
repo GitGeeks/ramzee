@@ -5,3 +5,4 @@ export * from "./user.js";
 export * from "./bleat.js";
 export * from "./social.js";
 export * from "./feed.js";
+export * from "./notification.js";
