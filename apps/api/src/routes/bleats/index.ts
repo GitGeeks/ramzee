@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import { bleatService } from "../../services/bleat.js";
 import { createBleatSchema, getBleatParams, getFeedQuery } from "./schemas.js";
 import type { CreateBleatInput, GetBleatParams, GetFeedQuery } from "./schemas.js";
 
@@ -23,15 +24,6 @@ export async function bleatRoutes(fastify: FastifyInstance) {
           herdId: { type: "string", format: "uuid" },
         },
       },
-      response: {
-        201: {
-          type: "object",
-          properties: {
-            success: { type: "boolean" },
-            data: { type: "object" },
-          },
-        },
-      },
     },
   }, async (request: FastifyRequest<{ Body: CreateBleatInput }>, reply: FastifyReply) => {
     const validation = createBleatSchema.safeParse(request.body);
@@ -47,20 +39,26 @@ export async function bleatRoutes(fastify: FastifyInstance) {
       });
     }
 
-    // TODO: Implement bleat creation
-    // 1. Extract ramtags from content
-    // 2. Create bleat in database
-    // 3. Update counters if reply/rebaa
-    // 4. Publish to feed service
-    // 5. Award points
+    try {
+      const bleat = await bleatService.create({
+        authorId: request.user.userId,
+        ...validation.data,
+      });
 
-    return reply.status(501).send({
-      success: false,
-      error: {
-        code: "NOT_IMPLEMENTED",
-        message: "Bleat creation not yet implemented",
-      },
-    });
+      return reply.status(201).send({
+        success: true,
+        data: bleat,
+      });
+    } catch (err) {
+      request.log.error(err);
+      return reply.status(500).send({
+        success: false,
+        error: {
+          code: "CREATE_FAILED",
+          message: "Failed to create bleat",
+        },
+      });
+    }
   });
 
   // Get a single bleat
@@ -89,17 +87,36 @@ export async function bleatRoutes(fastify: FastifyInstance) {
       });
     }
 
-    // TODO: Fetch bleat from database
-    // Check if user is blocked
-    // Include author info, huff status
+    try {
+      const bleat = await bleatService.getById(
+        validation.data.bleatId,
+        request.user?.userId
+      );
 
-    return reply.status(501).send({
-      success: false,
-      error: {
-        code: "NOT_IMPLEMENTED",
-        message: "Get bleat not yet implemented",
-      },
-    });
+      if (!bleat) {
+        return reply.status(404).send({
+          success: false,
+          error: {
+            code: "NOT_FOUND",
+            message: "Bleat not found",
+          },
+        });
+      }
+
+      return reply.send({
+        success: true,
+        data: bleat,
+      });
+    } catch (err) {
+      request.log.error(err);
+      return reply.status(500).send({
+        success: false,
+        error: {
+          code: "FETCH_FAILED",
+          message: "Failed to fetch bleat",
+        },
+      });
+    }
   });
 
   // Delete a bleat
@@ -123,17 +140,36 @@ export async function bleatRoutes(fastify: FastifyInstance) {
       });
     }
 
-    // TODO: Verify ownership
-    // Soft delete bleat
-    // Update counters
+    try {
+      const deleted = await bleatService.delete(
+        validation.data.bleatId,
+        request.user.userId
+      );
 
-    return reply.status(501).send({
-      success: false,
-      error: {
-        code: "NOT_IMPLEMENTED",
-        message: "Delete bleat not yet implemented",
-      },
-    });
+      if (!deleted) {
+        return reply.status(404).send({
+          success: false,
+          error: {
+            code: "NOT_FOUND",
+            message: "Bleat not found or not owned by you",
+          },
+        });
+      }
+
+      return reply.send({
+        success: true,
+        data: { message: "Bleat deleted successfully" },
+      });
+    } catch (err) {
+      request.log.error(err);
+      return reply.status(500).send({
+        success: false,
+        error: {
+          code: "DELETE_FAILED",
+          message: "Failed to delete bleat",
+        },
+      });
+    }
   });
 
   // Huff (like) a bleat
@@ -145,17 +181,48 @@ export async function bleatRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
   }, async (request: FastifyRequest<{ Params: GetBleatParams }>, reply: FastifyReply) => {
-    // TODO: Create huff
-    // Increment counter
-    // Award points to author
+    const validation = getBleatParams.safeParse(request.params);
 
-    return reply.status(501).send({
-      success: false,
-      error: {
-        code: "NOT_IMPLEMENTED",
-        message: "Huff not yet implemented",
-      },
-    });
+    if (!validation.success) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid bleat ID",
+        },
+      });
+    }
+
+    try {
+      const huffed = await bleatService.huff(
+        validation.data.bleatId,
+        request.user.userId
+      );
+
+      if (!huffed) {
+        return reply.status(409).send({
+          success: false,
+          error: {
+            code: "ALREADY_HUFFED",
+            message: "You have already huffed this bleat",
+          },
+        });
+      }
+
+      return reply.send({
+        success: true,
+        data: { message: "Bleat huffed successfully" },
+      });
+    } catch (err) {
+      request.log.error(err);
+      return reply.status(500).send({
+        success: false,
+        error: {
+          code: "HUFF_FAILED",
+          message: "Failed to huff bleat",
+        },
+      });
+    }
   });
 
   // Unhuff (unlike) a bleat
@@ -166,17 +233,49 @@ export async function bleatRoutes(fastify: FastifyInstance) {
       description: "Remove huff from a bleat",
       security: [{ bearerAuth: [] }],
     },
-  }, async (_request, reply: FastifyReply) => {
-    // TODO: Remove huff
-    // Decrement counter
+  }, async (request: FastifyRequest<{ Params: GetBleatParams }>, reply: FastifyReply) => {
+    const validation = getBleatParams.safeParse(request.params);
 
-    return reply.status(501).send({
-      success: false,
-      error: {
-        code: "NOT_IMPLEMENTED",
-        message: "Unhuff not yet implemented",
-      },
-    });
+    if (!validation.success) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid bleat ID",
+        },
+      });
+    }
+
+    try {
+      const unhuffed = await bleatService.unhuff(
+        validation.data.bleatId,
+        request.user.userId
+      );
+
+      if (!unhuffed) {
+        return reply.status(404).send({
+          success: false,
+          error: {
+            code: "NOT_HUFFED",
+            message: "You have not huffed this bleat",
+          },
+        });
+      }
+
+      return reply.send({
+        success: true,
+        data: { message: "Huff removed successfully" },
+      });
+    } catch (err) {
+      request.log.error(err);
+      return reply.status(500).send({
+        success: false,
+        error: {
+          code: "UNHUFF_FAILED",
+          message: "Failed to remove huff",
+        },
+      });
+    }
   });
 
   // Get bleat replies
@@ -185,16 +284,58 @@ export async function bleatRoutes(fastify: FastifyInstance) {
     schema: {
       tags: ["Bleats"],
       description: "Get replies to a bleat",
-    },
-  }, async (_request, reply: FastifyReply) => {
-    // TODO: Fetch replies with pagination
-
-    return reply.status(501).send({
-      success: false,
-      error: {
-        code: "NOT_IMPLEMENTED",
-        message: "Get replies not yet implemented",
+      params: {
+        type: "object",
+        properties: {
+          bleatId: { type: "string", format: "uuid" },
+        },
       },
-    });
+      querystring: {
+        type: "object",
+        properties: {
+          cursor: { type: "string" },
+          limit: { type: "number", minimum: 1, maximum: 50 },
+        },
+      },
+    },
+  }, async (request: FastifyRequest<{ Params: GetBleatParams; Querystring: GetFeedQuery }>, reply: FastifyReply) => {
+    const paramsValidation = getBleatParams.safeParse(request.params);
+    const queryValidation = getFeedQuery.safeParse(request.query);
+
+    if (!paramsValidation.success) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid bleat ID",
+        },
+      });
+    }
+
+    try {
+      const result = await bleatService.getReplies(
+        paramsValidation.data.bleatId,
+        queryValidation.success ? queryValidation.data.cursor : undefined,
+        queryValidation.success ? queryValidation.data.limit : 20,
+        request.user?.userId
+      );
+
+      return reply.send({
+        success: true,
+        data: result.bleats,
+        meta: {
+          nextCursor: result.nextCursor,
+        },
+      });
+    } catch (err) {
+      request.log.error(err);
+      return reply.status(500).send({
+        success: false,
+        error: {
+          code: "FETCH_FAILED",
+          message: "Failed to fetch replies",
+        },
+      });
+    }
   });
 }
