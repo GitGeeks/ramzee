@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import fp from "fastify-plugin";
 import fastifyJwt from "@fastify/jwt";
 import { env } from "../config/index.js";
 
@@ -24,7 +25,7 @@ declare module "@fastify/jwt" {
   }
 }
 
-export async function authPlugin(fastify: FastifyInstance) {
+async function authPluginImpl(fastify: FastifyInstance) {
   await fastify.register(fastifyJwt, {
     secret: env.JWT_SECRET,
     sign: {
@@ -66,3 +67,7 @@ export async function authPlugin(fastify: FastifyInstance) {
     }
   });
 }
+
+export const authPlugin = fp(authPluginImpl, {
+  name: "auth",
+});
