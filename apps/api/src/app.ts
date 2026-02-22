@@ -2,7 +2,7 @@ import Fastify, { type FastifyInstance, type FastifyError } from "fastify";
 import helmet from "@fastify/helmet";
 import { env } from "./config/index.js";
 import { authPlugin, corsPlugin, rateLimitPlugin, swaggerPlugin, websocketPlugin } from "./plugins/index.js";
-import { healthRoutes, authRoutes, bleatRoutes, userRoutes, feedRoutes, notificationRoutes, herdRoutes, messageRoutes } from "./routes/index.js";
+import { healthRoutes, authRoutes, bleatRoutes, userRoutes, feedRoutes, notificationRoutes, herdRoutes, messageRoutes, gamificationRoutes } from "./routes/index.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -93,6 +93,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(notificationRoutes, { prefix: "/v1" });
   await fastify.register(herdRoutes, { prefix: "/v1" });
   await fastify.register(messageRoutes, { prefix: "/v1" });
+  await fastify.register(gamificationRoutes, { prefix: "/v1" });
 
   return fastify;
 }
